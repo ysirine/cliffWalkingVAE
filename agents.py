@@ -6,9 +6,6 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Sequential
 from utility import state_array, save_data
 
-#number of steps until end of game is not same for each episode to save that in step_cache
-#save observation history ( by episode not same size)
-#save qtable
 
 
 class SARSA:
