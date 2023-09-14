@@ -1,20 +1,3 @@
-"""
-Kernels are filters
-the weights of the kernel are learned (e.g detect contours)
-number of kernels in a con layer is chose intuitively based on ow complicated is the dateset
-convolution is the multiplication of kernels with each value in the input
-
-How to choose parameters:
-for kernel: grid size use odd numbers cause need a center value to make convolution
-stride is step size of sliding the kernel on input
-
-for conv layer: since it has multiple kernels: each kernel gives us a 2d array
-so we outputs from one layer is 2d arrays of an amount of number of kernels
-
-after convolution we have pooling which is meant to downsize the input usually with a max or average operation
-"""
-
-
 import os
 import pickle
 
@@ -32,10 +15,7 @@ tf.compat.v1.disable_eager_execution()
 
 
 class VAE:
-    """
-    VAE represents a Deep Convolutional variational autoencoder architecture
-    with mirrored encoder and decoder components.
-    """
+
 
     def __init__(self,
                  input_shape,
@@ -163,7 +143,7 @@ class VAE:
         return Input(shape=self.latent_space_dim, name="decoder_input")
 
     def _add_dense_layer(self, decoder_input):
-        num_neurons = np.prod(self._shape_before_bottleneck) # [1, 2, 4] -> 8　it is because in dense layer we need one dimension (flatten) not three
+        num_neurons = np.prod(self._shape_before_bottleneck) 
         dense_layer = Dense(num_neurons, name="decoder_dense")(decoder_input)
         return dense_layer
 
@@ -174,7 +154,7 @@ class VAE:
         """Add conv transpose blocks."""
         # loop through all the conv layers in reverse order and stop at the
         # first layer
-        for layer_index in reversed(range(1, self._num_conv_layers)): #[3,2,1]
+        for layer_index in reversed(range(1, self._num_conv_layers)): 
             x = self._add_conv_transpose_layer(layer_index, x)
         return x
 
@@ -245,27 +225,16 @@ class VAE:
         """Flatten data and add bottleneck with Guassian sampling (Dense
         layer).
         """
-        self._shape_before_bottleneck = K.int_shape(x)[1:] #we need to save the shape of data before flatting it to help us
-                                                            # later build the decoder as it will be mirrored
-                                                            # int_shape gives us the shape of the output of the graph x
-                                                            #in this scenario the output is a 4 dimensional array [batch size, w,h,channels]
-                                                            #[1:] because we don't need batch size so we only take last 4 parameters
-        x = Flatten()(x) #he function flattens the tensor along all dimensions except for the first dimension. This means that if
-                        # you have a tensor of shape (batch_size, height, width, channels), the flatten function will flatten the
-                        # tensor into a shape of (batch_size, height * width * channels).
-                        #remember x is a graph here
+        self._shape_before_bottleneck = K.int_shape(x)[1:] 
+    
+        x = Flatten()(x) 
         self.mu = Dense(self.latent_space_dim, name="mu")(x)
-        self.log_variance = Dense(self.latent_space_dim,
-                                  name="log_variance")(x)
+        self.log_variance = Dense(self.latent_space_dim, name="log_variance")(x)
 
         def sample_point_from_normal_distribution(args):
             mu, log_variance = args
-            epsilon = K.random_normal(shape=K.shape(self.mu), mean=0.,
-                                      stddev=1.) # we want to randomly generate numbers (i.e. 𝑥 values) such that the values of 𝑥
-                                                # are in proportion to the PDF. So for the standard normal distribution, 𝑁∼(0,1)
-                                                # (the red curve in the picture above), most of the values would fall close to
-                                                #somewhere around 𝑥=0. In fact, 68% will fall within [−1,1], 95% will fall within [−2,2]
-                                                # and 99.7% will fall within [−3,3].
+            epsilon = K.random_normal(shape=K.shape(self.mu), mean=0.,stddev=1.) 
+            
             sampled_point = mu + K.exp(log_variance / 2) * epsilon
             return sampled_point
 
